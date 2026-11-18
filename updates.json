@@ -1,7 +1,13 @@
 {
   "addons": {
     "{546392c2-c2a7-4eea-8f6c-3f9d47237343}": {
-      "updates": []
+      "updates": [
+        {
+          "version": "1.2.0",
+          "update_link": "https://github.com/KochFe/gta6-spoiler-shield/releases/download/v1.2.0/gta6-spoiler-shield-1.2.0.xpi",
+          "update_hash": "sha256:730a6e164e8eb00e894b47115bee2d4da125dddc2c1c684f5242958b7d670ede"
+        }
+      ]
     }
   }
 }
