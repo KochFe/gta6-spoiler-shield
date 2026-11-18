@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GTA VI Spoiler Shield",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Blurs GTA VI news, trailers, thumbnails and spoilers across the web until you're ready to play.",
   "icons": {
     "48": "icons/icon.svg",
