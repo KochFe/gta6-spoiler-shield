@@ -142,6 +142,9 @@
 
   function blurMatch(el) {
     if (!el || isPageRoot(el)) return;
+    // Already covered: skip the container search. Bounds the work a page with
+    // thousands of matches inside one item can cause.
+    if (closestAcross(el, `[${BLUR_ATTR}="${ITEM}"]`)) return;
     if (document.readyState === 'loading') {
       // Ancestors are still half-parsed, so their text length says nothing yet.
       const item = itemSelector && closestAcross(el, itemSelector);

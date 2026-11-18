@@ -1,6 +1,7 @@
 // Publishes a new version that installed copies pick up automatically:
-// bump version → tests + lint → sign (unlisted) → GitHub release with the .xpi
-// → add it to updates.json (the manifest's update_url) and push.
+// bump version → tests + lint → sign (unlisted) → verify the signed package
+// against the source → GitHub release with the .xpi → add it to updates.json
+// (the manifest's update_url) and push.
 //
 // Usage (PowerShell, with the AMO credentials set as for `npm run sign`):
 //   npm run release -- <patch|minor|major|x.y.z>
@@ -9,6 +10,7 @@ import { createHash } from 'node:crypto';
 import { copyFileSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifyXpi } from './verify-xpi.mjs';
 
 const REPO = 'KochFe/gta6-spoiler-shield';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -16,9 +18,17 @@ const artifacts = path.join(root, 'web-ext-artifacts');
 const manifestPath = path.join(root, 'manifest.json');
 const updatesPath = path.join(root, 'updates.json');
 
-const run = (cmd) => execSync(cmd, { cwd: root, stdio: 'inherit' });
-const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
-const gh = (...args) => execFileSync('gh', args, { cwd: root, stdio: 'inherit' });
+// Only `web-ext sign` gets the AMO credentials. Tests, lint, git and gh run
+// without them, so a compromised dev dependency can't read them.
+const KEY_VARS = ['WEB_EXT_API_KEY', 'WEB_EXT_API_SECRET'];
+const envWithoutKeys = Object.fromEntries(
+  Object.entries(process.env).filter(([k]) => !KEY_VARS.includes(k.toUpperCase()))
+);
+
+const run = (cmd, env = envWithoutKeys) => execSync(cmd, { cwd: root, stdio: 'inherit', env });
+const git = (...args) =>
+  execFileSync('git', args, { cwd: root, encoding: 'utf8', env: envWithoutKeys }).trim();
+const gh = (...args) => execFileSync('gh', args, { cwd: root, stdio: 'inherit', env: envWithoutKeys });
 const fail = (msg) => {
   console.error(`\n✖ ${msg}`);
   process.exit(1);
@@ -64,7 +74,7 @@ let assetPath;
 try {
   run('npm run check');
   const started = Date.now();
-  run('npx web-ext sign --channel=unlisted');
+  run('npx web-ext sign --channel=unlisted', process.env);
   // web-ext names the download after AMO's file name; take the one just written.
   const signed = readdirSync(artifacts)
     .filter((f) => f.endsWith('.xpi'))
@@ -74,6 +84,9 @@ try {
   if (!signed) throw new Error('web-ext sign finished but no new .xpi was found');
   assetPath = path.join(artifacts, assetName);
   if (signed !== assetPath) copyFileSync(signed, assetPath);
+  const problems = verifyXpi(assetPath);
+  if (problems.length) throw new Error(`signed package does not match the source:\n  ${problems.join('\n  ')}`);
+  console.log('✔ signed package matches the source');
 } catch (err) {
   git('checkout', '--', 'manifest.json', 'package.json', 'package-lock.json');
   fail(`${err.message}\nVersion bump reverted; nothing was pushed.`);

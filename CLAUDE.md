@@ -62,6 +62,28 @@ fetches updates anonymously). Release with `npm run release -- <patch|minor|majo
   become a different add-on.
 - AMO rejects re-signing an existing version; the script always bumps.
 - `npm run lint` uses `--self-hosted`; without it `update_url` is an error.
+- After signing, `scripts/verify-xpi.mjs` (dependency-free on purpose) checks
+  that the signed package holds exactly `SHIPPED` source files plus META-INF.
+  `manifest.json` is compared by parsed content, because AMO re-serializes it
+  when signing. Adding a new shipped root file means adding it to `SHIPPED`.
+- Only `web-ext sign` gets the AMO keys; tests/lint/git/gh run with them
+  stripped from the environment. Keep it that way.
+- GitHub rulesets block force-push/deletion of `main` and force-push, update or
+  deletion of `v*` tags. Never "fix" a release by moving a tag; release a new
+  version. Commits in this repo use the user's GitHub noreply address
+  (repo-local `git config user.email`). Don't change it.
+
+### Security invariants
+
+- Permissions stay `storage` only (+ content-script host access). No `tabs`,
+  `scripting`, `webRequest`, no `web_accessible_resources`, no
+  `externally_connectable`, no custom CSP.
+- Page-controlled data (text, attributes, URLs, titles) is only ever regex-tested
+  or assigned via `textContent`/`document.title`. Never `innerHTML`, `eval`,
+  `new Function`, or string-built selectors from page data.
+- New regex patterns must keep linear-time behaviour: no nested quantifiers.
+  The adversarial-input test in `test/matcher.test.js` must stay green.
+- Background validates every message (`sender.id`, `frameId`, types).
 - The script bumps `package.json`/`package-lock.json` via `npm version` and
   `manifest.json` by regex, keeping their formatting.
 

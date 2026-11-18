@@ -21,10 +21,13 @@
     if (area === 'sync' && 'enabled' in changes) refreshGlobalBadge();
   });
 
+  // Only our own content scripts can reach this (no externally_connectable),
+  // but validate anyway: content scripts live inside untrusted pages.
   browser.runtime.onMessage.addListener((msg, sender) => {
-    if (msg?.type !== 'gta6-shield:report' || !sender.tab || sender.frameId !== 0) return;
+    if (sender.id !== browser.runtime.id || !sender.tab || sender.frameId !== 0) return;
+    if (msg?.type !== 'gta6-shield:report' || !Number.isSafeInteger(msg.blurred)) return;
     let text = null;
-    if (msg.allowlisted) text = 'II';
+    if (msg.allowlisted === true) text = 'II';
     else if (msg.blurred > 0) text = msg.blurred > 999 ? '999+' : String(msg.blurred);
     browser.action.setBadgeText({ tabId: sender.tab.id, text });
   });

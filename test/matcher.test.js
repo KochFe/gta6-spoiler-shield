@@ -89,6 +89,27 @@ test('custom keywords are escaped and boundary-aware', () => {
   assert.ok(!m('nothing here'));
 });
 
+test('adversarial page text cannot cause catastrophic backtracking', () => {
+  // Pages control all text fed to the regex. Each input is ~1 MB of
+  // near-matches; linear-time matching handles these in well under a second.
+  const m = buildMatcher({ keywords: ['a b c d', 'x-y-z'], blockPublisher: true });
+  const inputs = [
+    'gta' + ' -_.:+'.repeat(170000) + 'x',
+    'grand theft auto '.repeat(60000) + 'v',
+    'gta gta gta gta '.repeat(65000),
+    'a '.repeat(500000) + 'b',
+    'a b c '.repeat(170000),
+    'x-y-'.repeat(250000),
+    '​'.repeat(1000000) + 'gtv',
+  ];
+  for (const text of inputs) {
+    const t = process.hrtime.bigint();
+    m(text);
+    const ms = Number(process.hrtime.bigint() - t) / 1e6;
+    assert.ok(ms < 1000, `${ms.toFixed(0)} ms for input starting ${JSON.stringify(text.slice(0, 12))}`);
+  }
+});
+
 test('matcher is stateless across calls', () => {
   assert.ok(matches('GTA 6'));
   assert.ok(matches('GTA 6'));
