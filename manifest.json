@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "GTA VI Spoiler Shield",
+  "version": "1.1.0",
+  "description": "Blurs GTA VI news, trailers, thumbnails and spoilers across the web until you're ready to play.",
+  "icons": {
+    "48": "icons/icon.svg",
+    "96": "icons/icon.svg"
+  },
+  "permissions": ["storage"],
+  "background": {
+    "scripts": ["src/matcher.js", "src/background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/matcher.js", "src/sites.js", "src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_title": "GTA VI Spoiler Shield",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": "icons/icon.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{546392c2-c2a7-4eea-8f6c-3f9d47237343}",
+      "strict_min_version": "142.0",
+      "update_url": "https://raw.githubusercontent.com/KochFe/gta6-spoiler-shield/main/updates.json",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}

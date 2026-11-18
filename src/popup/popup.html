@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="../../icons/icon.svg" alt="" width="28" height="28" />
+      <div>
+        <h1>Spoiler Shield</h1>
+        <p id="state" class="muted">Loading…</p>
+      </div>
+      <label class="switch" title="Filtering on/off">
+        <input type="checkbox" id="enabled" />
+        <span></span>
+      </label>
+    </header>
+
+    <section id="site" hidden>
+      <div class="site-row">
+        <div>
+          <div id="hostname" class="host"></div>
+          <div id="page-stats" class="muted"></div>
+        </div>
+        <button type="button" id="pause"></button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Also block</h2>
+      <label class="check">
+        <input type="checkbox" id="blockLore" />
+        <span>Setting &amp; character names <small class="muted">places and people from the trailers</small></span>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="blockPublisher" />
+        <span>Rockstar &amp; Take-Two news <small class="muted">aggressive, more false positives</small></span>
+      </label>
+    </section>
+
+    <section>
+      <h2><label for="keywords">Extra keywords</label></h2>
+      <textarea id="keywords" rows="4" spellcheck="false" placeholder="One per line"></textarea>
+      <div class="row">
+        <button type="button" id="save">Save keywords</button>
+        <span id="saved" class="ok" hidden>Saved</span>
+      </div>
+    </section>
+
+    <section id="paused-section" hidden>
+      <h2>Paused sites</h2>
+      <ul id="paused-list"></ul>
+    </section>
+
+    <script src="../matcher.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

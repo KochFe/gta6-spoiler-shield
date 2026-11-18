@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Neutral feed</title>
+  </head>
+  <body>
+    <h1>Feed</h1>
+    <ul>
+      <li id="bad">Made-up GTA 6 headline</li>
+      <li id="ok">Pasta recipe of the day</li>
+    </ul>
+    <div id="later"></div>
+    <script>
+      setTimeout(() => {
+        const li = document.createElement('li');
+        li.id = 'late';
+        li.textContent = 'Another #GTA6 item';
+        document.getElementById('later').append(li);
+      }, 300);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+/* Blur in place: the item keeps its spot in the layout. clip-path keeps the
+   blur from bleeding over neighbours; pointer-events stops hover previews
+   (e.g. YouTube's inline video preview) and accidental clicks. Keep in sync
+   with INLINE_BLUR in content.js. */
+[data-gta6-shield] {
+  filter: blur(16px) !important;
+  clip-path: inset(0) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
