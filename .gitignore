@@ -3,3 +3,5 @@ web-ext-artifacts/
 *.xpi
 # Local state written by `web-ext sign`.
 .amo-upload-uuid
+# Local instructions for Claude Code; kept out of the public repo.
+CLAUDE.md
