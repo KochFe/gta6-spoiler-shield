@@ -11,6 +11,11 @@
           "version": "1.2.1",
           "update_link": "https://github.com/KochFe/gta6-spoiler-shield/releases/download/v1.2.1/gta6-spoiler-shield-1.2.1.xpi",
           "update_hash": "sha256:c42fd20ef2a18d3c3d35707162132442365f14379ced571f09ba70b8475259c6"
+        },
+        {
+          "version": "1.2.2",
+          "update_link": "https://github.com/KochFe/gta6-spoiler-shield/releases/download/v1.2.2/gta6-spoiler-shield-1.2.2.xpi",
+          "update_hash": "sha256:bad5afe7b1f3e80300f3a2bca6018613f2a0491f5ab988379e3e5d0db40b7af0"
         }
       ]
     }
