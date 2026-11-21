@@ -3,6 +3,8 @@
 //   search result). When matching text is found, the closest one is blurred.
 // - media: video players blurred when the page as a whole is about GTA VI
 //   (its title/URL/heading matches), since a player has no text to match.
+// - search: search boxes incl. their suggestion dropdowns, which are not
+//   filtered at all (user's choice; see GENERIC_SEARCH).
 // Sites change their markup often; update these first when something slips
 // through.
 (function () {
@@ -20,8 +22,21 @@
         'yt-lockup-view-model', 'ytm-shorts-lockup-view-model', 'ytm-shorts-lockup-view-model-v2',
         // Player end screen and autoplay "up next".
         '.ytp-videowall-still', '.ytp-ce-element', '.ytp-autonav-endscreen-upnext-container',
+        // Live chat (its own frame on youtube.com/live_chat): one message each.
+        'yt-live-chat-text-message-renderer', 'yt-live-chat-paid-message-renderer',
+        'yt-live-chat-membership-item-renderer', 'yt-live-chat-paid-sticker-renderer',
       ],
       media: ['#movie_player', 'ytd-reel-video-renderer'],
+      search: ['yt-searchbox', 'ytd-searchbox'],
+    },
+    {
+      host: /(^|\.)twitch\.tv$/,
+      // One chat message each (live chat, VOD chat replay), so a match blurs
+      // that message instead of the whole chat.
+      items: [
+        '.chat-line__message', '[data-a-target="chat-line-message"]', '.chat-line__status',
+        '.user-notice-line', '.vod-message',
+      ],
     },
     {
       host: /(^|\.)reddit\.com$/,
@@ -58,6 +73,15 @@
     'iframe[src*="player.vimeo.com"]',
   ];
 
+  // Search boxes/autocomplete widgets: never filtered, so typing a letter
+  // doesn't blur the whole box when one suggestion mentions the game.
+  // Suggestion listboxes linked via aria-controls/aria-owns count too (content.js).
+  const GENERIC_SEARCH = ['[role="search"]', '[role="combobox"]'];
+
+  // Append-only logs (chats). The card climb stops below them: a young chat has
+  // little text and would pass as a "card", then stay blurred as it grows.
+  const LOG_CONTAINERS = ['[role="log"]'];
+
   // Text blocks blurred as a whole, so a blurred link doesn't leave the rest of
   // its sentence readable.
   const BLOCK_ELEMENTS = [
@@ -66,10 +90,14 @@
 
   function siteFor(hostname) {
     const site = SITES.find((s) => s.host.test(hostname)) || {};
-    return { items: site.items || [], media: [...(site.media || []), ...GENERIC_MEDIA] };
+    return {
+      items: site.items || [],
+      media: [...(site.media || []), ...GENERIC_MEDIA],
+      search: [...(site.search || []), ...GENERIC_SEARCH],
+    };
   }
 
-  const api = { siteFor, GENERIC_CONTAINERS, BLOCK_ELEMENTS };
+  const api = { siteFor, GENERIC_CONTAINERS, BLOCK_ELEMENTS, LOG_CONTAINERS };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else globalThis.GTAFilterSites = api;
 })();

@@ -6,7 +6,7 @@
   'use strict';
 
   const { buildMatcher, DEFAULT_SETTINGS } = globalThis.GTAFilter;
-  const { siteFor, GENERIC_CONTAINERS, BLOCK_ELEMENTS } = globalThis.GTAFilterSites;
+  const { siteFor, GENERIC_CONTAINERS, BLOCK_ELEMENTS, LOG_CONTAINERS } = globalThis.GTAFilterSites;
 
   const BLUR_ATTR = 'data-gta6-shield';
   // Attribute values: matched item vs. media blurred because the page matched.
@@ -35,6 +35,8 @@
   const mediaSelector = site.media.join(',');
   const genericSelector = GENERIC_CONTAINERS.join(',');
   const blockSelector = BLOCK_ELEMENTS.join(',');
+  const searchSelector = site.search.join(',');
+  const logSelector = LOG_CONTAINERS.join(',');
   const isTop = window === window.top;
   const observeOptions = {
     childList: true,
@@ -123,15 +125,22 @@
     const item = itemSelector && closestAcross(el, itemSelector);
     if (item) return item;
 
+    // A chat log is blurred per entry, never as a whole (see LOG_CONTAINERS).
+    const log = el.closest(logSelector);
     const generic = closestAcross(el, genericSelector);
-    if (generic && !isPageRoot(generic) && generic.textContent.length <= MAX_GENERIC_TEXT) {
+    if (
+      generic &&
+      !isPageRoot(generic) &&
+      generic.textContent.length <= MAX_GENERIC_TEXT &&
+      !(log && generic.contains(log))
+    ) {
       return generic;
     }
 
     let best = el;
     for (
       let i = 0, p = el.parentElement;
-      i < MAX_CLIMB && p && !isPageRoot(p) && p.textContent.length <= MAX_CARD_TEXT;
+      i < MAX_CLIMB && p && p !== log && !isPageRoot(p) && p.textContent.length <= MAX_CARD_TEXT;
       i++, p = p.parentElement
     ) {
       best = p;
@@ -140,11 +149,28 @@
     return block && block.contains(best) ? block : best;
   }
 
+  // Search boxes and their suggestion dropdowns aren't filtered (user's choice):
+  // one matching suggestion used to blur the whole box while typing.
+  function inSearchUI(el) {
+    if (closestAcross(el, searchSelector)) return true;
+    // ARIA 1.2 autocomplete: the input carries role=combobox and points at a
+    // listbox elsewhere via aria-controls (or aria-owns in older markup).
+    const listbox = closestAcross(el, '[role="listbox"]');
+    if (!listbox || !listbox.id) return false;
+    for (const owner of listbox.getRootNode().querySelectorAll('[aria-controls], [aria-owns]')) {
+      if (!owner.matches('input, [role="combobox"]')) continue;
+      const ids = `${owner.getAttribute('aria-controls') || ''} ${owner.getAttribute('aria-owns') || ''}`;
+      if (ids.split(/\s+/).includes(listbox.id)) return true;
+    }
+    return false;
+  }
+
   function blurMatch(el) {
     if (!el || isPageRoot(el)) return;
     // Already covered: skip the container search. Bounds the work a page with
     // thousands of matches inside one item can cause.
     if (closestAcross(el, `[${BLUR_ATTR}="${ITEM}"]`)) return;
+    if (inSearchUI(el)) return;
     if (document.readyState === 'loading') {
       // Ancestors are still half-parsed, so their text length says nothing yet.
       const item = itemSelector && closestAcross(el, itemSelector);

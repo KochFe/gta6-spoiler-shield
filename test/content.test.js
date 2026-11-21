@@ -228,3 +228,57 @@ test('reports a de-duplicated blurred count for the badge', async () => {
   assert.equal(last.type, 'gta6-shield:report');
   assert.equal(last.blurred, 2);
 });
+
+test('Twitch chat: blurs single messages, not the whole (young) chat', async () => {
+  const { $, isBlurred } = await load(
+    `<section id="chat"><div id="log" role="log" class="chat-scrollable-area__message-container">
+       <div class="chat-line__message" id="m1"><span>viewer1</span>: <span>GTA 6 when</span></div>
+       <div class="chat-line__message" id="m2"><span>viewer2</span>: <span>hi chat</span></div>
+     </div></section>`,
+    { url: 'https://www.twitch.tv/somestreamer' }
+  );
+  assert.ok(isBlurred($('#m1')));
+  assert.ok(!isBlurred($('#m2')));
+  assert.ok(!isBlurred($('#log')));
+});
+
+test('chat logs on unknown sites are blurred per entry', async () => {
+  const { $, doc, isBlurred, flush } = await load(
+    `<ul><li id="outer"><div id="log" role="log">
+       <div id="e2"><b>user2</b> hello there</div>
+     </div></li></ul>`
+  );
+  const entry = doc.createElement('div');
+  entry.id = 'e1';
+  entry.innerHTML = '<b>user1</b> <span>GTA VI hype</span>';
+  $('#log').append(entry);
+  await flush();
+  assert.ok(isBlurred($('#e1')));
+  assert.ok(!isBlurred($('#e2')));
+  assert.ok(!isBlurred($('#log')));
+});
+
+test('search boxes and their suggestions are not filtered', async () => {
+  const { $, doc, isBlurred, flush } = await load(
+    `<yt-searchbox id="yt"><input value="g"><div role="listbox" id="yt-list"></div></yt-searchbox>
+     <form role="search" id="form"><input type="search"><ul><li id="f1">GTA 6 trailer</li></ul></form>
+     <input role="combobox" aria-controls="sugg other-id">
+     <ul id="sugg" role="listbox"><li role="option" id="o1">GTA 6 trailer</li></ul>
+     <ul id="unlinked" role="listbox"><li role="option" id="o2">GTA 6 trailer</li></ul>
+     <ul><li id="content">GTA 6 trailer</li></ul>`,
+    { url: 'https://www.youtube.com/' }
+  );
+  // Suggestions typically appear while typing.
+  const opt = doc.createElement('div');
+  opt.setAttribute('role', 'option');
+  opt.id = 'yt1';
+  opt.textContent = 'gta 6 trailer';
+  $('#yt-list').append(opt);
+  await flush();
+  assert.ok(!isBlurred($('#yt1')));
+  assert.ok(!isBlurred($('#yt')));
+  assert.ok(!isBlurred($('#f1')));
+  assert.ok(!isBlurred($('#o1')));
+  assert.ok(isBlurred($('#o2')), 'a listbox no search input points at is still filtered');
+  assert.ok(isBlurred($('#content')), 'rest of the page is still filtered');
+});

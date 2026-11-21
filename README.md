@@ -104,6 +104,10 @@ paused on this site, `off` = disabled). Click it to:
 Blurred items can't be clicked or hovered, so YouTube can't start a preview
 video. If something harmless gets blurred, pause the add-on on that site.
 
+Chats (Twitch, YouTube live chat) are blurred one message at a time. Search
+boxes on websites and their suggestion dropdowns are deliberately **not**
+filtered, so typing stays usable. Suggestions may mention the game.
+
 ## Security
 
 - **Permissions:** `storage`, plus read/modify access to web pages, which it
